@@ -15,14 +15,67 @@ const Sentry = require("@sentry/node");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 
 Sentry.init({
-  dsn: process.env.SENTRY_DSN || "https://6f851a3a441b45ddb1b24bfe54d25ec3@bugsink.digiprodpass.com/1",
-  tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE) || 1.0,
-  profilesSampleRate: parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE) || 1.0,
+  dsn: process.env.SENTRY_DSN,
+
+  // Use 10% sample rate in production, 100% in development
+  tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE) ||
+    (process.env.NODE_ENV === 'production' ? 0.1 : 1.0),
+  profilesSampleRate: parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE) ||
+    (process.env.NODE_ENV === 'production' ? 0.1 : 1.0),
+
   environment: process.env.NODE_ENV || 'development',
   debug: process.env.NODE_ENV === 'development',
+
   integrations: [
     nodeProfilingIntegration(),
   ],
+
+  // Filter sensitive data before sending to Bugsink
+  beforeSend(event, hint) {
+    // Remove sensitive data from error messages and stack traces
+    if (event.exception?.values) {
+      event.exception.values = event.exception.values.map(exception => {
+        if (exception.value) {
+          // Redact common sensitive patterns
+          exception.value = exception.value
+            .replace(/password["\s:=]+[^\s&"]*/gi, 'password=***REDACTED***')
+            .replace(/token["\s:=]+[^\s&"]*/gi, 'token=***REDACTED***')
+            .replace(/api[_-]?key["\s:=]+[^\s&"]*/gi, 'api_key=***REDACTED***')
+            .replace(/secret["\s:=]+[^\s&"]*/gi, 'secret=***REDACTED***')
+            .replace(/authorization:\s*bearer\s+\S+/gi, 'authorization: bearer ***REDACTED***')
+            .replace(/mongodb:\/\/[^@]+@/gi, 'mongodb://***REDACTED***@')
+            .replace(/postgres:\/\/[^@]+@/gi, 'postgres://***REDACTED***@')
+            .replace(/mysql:\/\/[^@]+@/gi, 'mysql://***REDACTED***@');
+        }
+        return exception;
+      });
+    }
+
+    // Remove sensitive headers
+    if (event.request?.headers) {
+      delete event.request.headers['authorization'];
+      delete event.request.headers['cookie'];
+      delete event.request.headers['x-api-key'];
+    }
+
+    // Remove cookies
+    if (event.request?.cookies) {
+      delete event.request.cookies;
+    }
+
+    // Remove sensitive query params
+    if (event.request?.query_string) {
+      const sensitiveParams = ['password', 'token', 'api_key', 'secret', 'key', 'auth'];
+      let queryString = event.request.query_string;
+      sensitiveParams.forEach(param => {
+        const regex = new RegExp(`${param}=[^&]*`, 'gi');
+        queryString = queryString.replace(regex, `${param}=***REDACTED***`);
+      });
+      event.request.query_string = queryString;
+    }
+
+    return event;
+  },
 });
 
 // 3. NOW import other modules

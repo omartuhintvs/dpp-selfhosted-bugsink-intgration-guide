@@ -92,7 +92,10 @@ export default function TestSentryPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-2">Sentry Configuration</h2>
             <p className="text-gray-600 text-sm">
-              DSN: https://6f851a3a441b45ddb1b24bfe54d25ec3@bugsink.digiprodpass.com/1
+              DSN: {process.env.NEXT_PUBLIC_SENTRY_DSN ? 'Configured ✓' : 'Not configured - set NEXT_PUBLIC_SENTRY_DSN'}
+            </p>
+            <p className="text-gray-500 text-xs mt-1">
+              Sample Rate: {process.env.NODE_ENV === 'production' ? '10%' : '100% (dev)'}
             </p>
           </div>
         </div>
