@@ -1,4 +1,4 @@
-# Bugsink Self-Hosted Setup Guide
+# Bugsink Self-Hosted Integration Guide
 
 <div align="center">
 
