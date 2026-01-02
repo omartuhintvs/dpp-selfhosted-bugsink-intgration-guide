@@ -33,6 +33,60 @@ Bugsink is a self-hosted, Sentry-compatible error tracking platform. It uses the
 - **Example Project ID:** 1
 - **Compatibility:** 100% Sentry SDK compatible
 
+## 🎯 Why Sentry (Bugsink)?
+
+### The Problem Without Error Tracking
+
+**Production errors are invisible:**
+- Users encounter errors, but you don't know what happened
+- `console.log()` doesn't work in production
+- Reproducing user issues is nearly impossible
+- Critical bugs go unnoticed until customers complain
+- No context: What user? What browser? What actions led to the error?
+
+### What Sentry/Bugsink Solves
+
+**Real-time error monitoring:**
+- ✅ Capture every error automatically (client & server)
+- ✅ Full stack traces with source maps
+- ✅ User context (who experienced the error)
+- ✅ Breadcrumbs (what they did before the error)
+- ✅ Environment details (browser, OS, device)
+- ✅ Release tracking (which version introduced the bug)
+
+**Performance insights:**
+- 📊 Transaction monitoring
+- 📊 Slow query detection
+- 📊 API response times
+- 📊 Frontend performance metrics
+
+**Developer productivity:**
+- 🚀 Fix bugs before users report them
+- 🚀 Prioritize by impact (how many users affected)
+- 🚀 Group similar errors together
+- 🚀 See trends over time
+- 🚀 Integration with issue trackers (Jira, GitHub)
+
+### Why Bugsink (Self-Hosted)?
+
+**Bugsink gives you all of Sentry's power, plus:**
+
+| Feature | Bugsink (Self-Hosted) | Sentry Cloud |
+|---------|----------------------|--------------|
+| **Data Control** | ✅ Your infrastructure | ❌ Third-party servers |
+| **Privacy** | ✅ Sensitive data stays internal | ⚠️ Data sent to Sentry |
+| **Cost** | ✅ Unlimited events | ❌ Pay per event |
+| **Customization** | ✅ Full control | ⚠️ Limited |
+| **Compliance** | ✅ Meet data residency requirements | ⚠️ May not comply |
+| **SDK Compatibility** | ✅ 100% Sentry SDK compatible | ✅ Native |
+
+**Perfect for:**
+- 🏢 Enterprise applications with compliance requirements
+- 💰 High-traffic apps (avoid per-event costs)
+- 🔒 Applications handling sensitive data
+- 🌍 Companies with data residency restrictions
+- 🛠️ Teams wanting full control over their monitoring stack
+
 ## 📁 Project Structure
 
 ```
