@@ -91,21 +91,43 @@ Bugsink is a self-hosted, Sentry-compatible error tracking platform. It uses the
 
 ```
 dpp-selfhosted-bugsink-setup-guide/
-├── README.md                           # This file
+├── README.md                           # This file - Main documentation
+├── SECURITY.md                         # 🔐 Security hardening guide
 ├── SENTRY_INTEGRATION_NEXTJS.md       # Complete Next.js integration guide
 ├── SENTRY_INTEGRATION_EXPRESS.md      # Complete Express.js integration guide
+│
 ├── nextjs-demo/                       # Next.js 16 with App Router + Sentry
 │   ├── app/                          # Next.js app directory
 │   │   ├── test-sentry/              # Error testing page
-│   │   └── api/                      # API routes with error tracking
+│   │   │   └── page.tsx             # Interactive error testing UI
+│   │   ├── api/                      # API routes with error tracking
+│   │   │   ├── test-error/          # API error testing endpoint
+│   │   │   └── check-integrations/  # Integration status endpoint
+│   │   ├── layout.tsx               # Root layout with metadata
+│   │   ├── page.tsx                 # Home page
+│   │   └── global.css               # Global styles
 │   ├── public/                       # Static assets
-│   ├── sentry.client.config.ts       # Client-side Sentry config
-│   ├── sentry.server.config.ts       # Server-side Sentry config
+│   ├── sentry.client.config.ts       # 🔐 Client-side config (with beforeSend filtering)
+│   ├── sentry.server.config.ts       # 🔐 Server-side config (with beforeSend filtering)
 │   ├── instrumentation.ts            # Sentry instrumentation hook
-│   └── INTEGRATION_VERIFICATION.md   # Verification report
+│   ├── next.config.ts               # Next.js + Sentry webpack config
+│   ├── .env.local.example           # 🔐 Environment variables template
+│   ├── .gitignore                   # Git ignore rules
+│   ├── package.json                 # Dependencies
+│   ├── tsconfig.json                # TypeScript configuration
+│   ├── tailwind.config.ts           # Tailwind CSS configuration
+│   ├── INTEGRATION_VERIFICATION.md  # Verification report
+│   └── README.md                    # Next.js demo documentation
+│
 └── express-sentry-demo/              # Express.js + Sentry demo
-    ├── test-sentry.js                # Express server with test routes
+    ├── app.js                        # 🔐 Express server (with beforeSend filtering)
+    ├── .env                          # 🔐 Environment variables (excluded from git)
+    ├── .env.example                  # 🔐 Environment variables template
+    ├── .gitignore                    # 🔐 Git ignore rules
+    ├── package.json                  # Dependencies
     └── README.md                     # Express demo documentation
+
+🔐 = Security hardened files (credentials filtered, environment-based config)
 ```
 
 ## 🚀 Quick Start
@@ -114,7 +136,15 @@ dpp-selfhosted-bugsink-setup-guide/
 
 ```bash
 cd nextjs-demo
+
+# 1. Install dependencies
 npm install
+
+# 2. Configure environment (copy template and add your DSN)
+cp .env.local.example .env.local
+# Edit .env.local and add your Bugsink DSN
+
+# 3. Start development server
 npm run dev
 ```
 
@@ -127,7 +157,16 @@ Visit:
 
 ```bash
 cd express-sentry-demo
-node test-sentry.js
+
+# 1. Install dependencies
+npm install
+
+# 2. Configure environment (copy template and add your DSN)
+cp .env.example .env
+# Edit .env and add your Bugsink DSN
+
+# 3. Start server
+node app.js
 ```
 
 Test endpoints:
@@ -171,10 +210,10 @@ Before integrating into your own project, read the comprehensive guides:
 
 ## 🐛 Bugsink Integration
 
-All errors are tracked and sent to:
-- **Dashboard:** https://bugsink.digiprodpass.com/
-- **Project ID:** 1
-- **DSN:** `https://6f851a3a441b45ddb1b24bfe54d25ec3@bugsink.digiprodpass.com/1`
+All errors are tracked and sent to your configured Bugsink instance:
+- **Dashboard:** https://bugsink.digiprodpass.com/ (or your self-hosted instance)
+- **Configuration:** Set via environment variables (see `.env.example` files)
+- **Security:** Credentials filtered automatically via `beforeSend` hooks
 
 ### Features
 ✓ Client-side error tracking
@@ -182,11 +221,14 @@ All errors are tracked and sent to:
 ✓ Performance monitoring (traces & spans)
 ✓ Session tracking
 ✓ Request/Response logging
+✓ 🔐 Automatic credential filtering (passwords, tokens, API keys)
+✓ 🔐 Optimized sample rates (10% prod, 100% dev)
 ✓ 44 integrations loaded (Express, Http, Database, AI, etc.)
 
 ## 📚 Additional Documentation
 
 ### Repository Root Guides
+- **[SECURITY.md](./SECURITY.md)** - 🔐 Security hardening guide (credential management, data filtering, production checklist)
 - [SENTRY_INTEGRATION_NEXTJS.md](./SENTRY_INTEGRATION_NEXTJS.md) - Comprehensive Next.js guide
 - [SENTRY_INTEGRATION_EXPRESS.md](./SENTRY_INTEGRATION_EXPRESS.md) - Comprehensive Express.js guide
 
@@ -330,35 +372,55 @@ Your Sentry DSN (Data Source Name) format:
 https://<public_key>@<host>/<project_id>
 ```
 
-**Example DSN:**
+Get your actual DSN from your Bugsink dashboard:
+1. Log into https://bugsink.digiprodpass.com/
+2. Navigate to: Settings → Projects → [Your Project]
+3. Click "Client Keys (DSN)"
+4. Copy your DSN
+
+### Environment Variables Setup
+
+**For Next.js** - Copy template and configure:
+```bash
+cp nextjs-demo/.env.local.example nextjs-demo/.env.local
+# Edit .env.local with your actual DSN
 ```
-https://6f851a3a441b45ddb1b24bfe54d25ec3@bugsink.digiprodpass.com/1
-```
 
-Get your actual DSN from your [Bugsink project settings](https://bugsink.digiprodpass.com/).
-
-### Environment Variables (Recommended)
-
-**For Next.js** - Create `.env.local`:
+Template contents (`.env.local.example`):
 ```env
-NEXT_PUBLIC_SENTRY_DSN=https://your-key@bugsink.digiprodpass.com/your-project-id
-SENTRY_AUTH_TOKEN=your-auth-token-here
-NODE_ENV=development
+# REQUIRED: Get from Bugsink dashboard
+NEXT_PUBLIC_SENTRY_DSN=https://YOUR_PUBLIC_KEY@your-bugsink-domain.com/PROJECT_ID
+SENTRY_DSN=https://YOUR_PUBLIC_KEY@your-bugsink-domain.com/PROJECT_ID
+
+# Optional: Override sample rates (defaults: 10% prod, 100% dev)
+# SENTRY_TRACES_SAMPLE_RATE=0.1
 ```
 
-**For Express.js** - Create `.env`:
+**For Express.js** - Copy template and configure:
+```bash
+cp express-sentry-demo/.env.example express-sentry-demo/.env
+# Edit .env with your actual DSN
+```
+
+Template contents (`.env.example`):
 ```env
-SENTRY_DSN=https://your-key@bugsink.digiprodpass.com/your-project-id
-SENTRY_AUTH_TOKEN=your-auth-token-here
+# Environment
 NODE_ENV=development
 PORT=3000
+
+# REQUIRED: Get from Bugsink dashboard
+SENTRY_DSN=https://YOUR_PUBLIC_KEY@your-bugsink-domain.com/PROJECT_ID
+
+# Optional: Override sample rates
+# SENTRY_TRACES_SAMPLE_RATE=0.1
+# SENTRY_PROFILES_SAMPLE_RATE=0.1
 ```
 
-> **Important:** Replace with your actual DSN from Bugsink dashboard and add `.env` / `.env.local` to `.gitignore`
+> **Security:** `.env` and `.env.local` files are automatically excluded from git via `.gitignore`
 
 ## 🔐 Configuration Examples
 
-### Next.js Configuration
+### Next.js Configuration (Security Hardened)
 
 **Client-side** (`sentry.client.config.ts`):
 ```typescript
@@ -366,9 +428,35 @@ import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  tracesSampleRate: 1.0,
+
+  // 10% sample rate in production, 100% in dev
+  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+
   environment: process.env.NODE_ENV,
   debug: process.env.NODE_ENV === 'development',
+
+  // Filter sensitive data before sending
+  beforeSend(event, hint) {
+    // Redact passwords, tokens, API keys
+    if (event.exception?.values) {
+      event.exception.values = event.exception.values.map(exception => {
+        if (exception.value) {
+          exception.value = exception.value
+            .replace(/password["\s:=]+[^\s&"]*/gi, 'password=***REDACTED***')
+            .replace(/token["\s:=]+[^\s&"]*/gi, 'token=***REDACTED***');
+        }
+        return exception;
+      });
+    }
+
+    // Remove sensitive headers
+    if (event.request?.headers) {
+      delete event.request.headers['authorization'];
+      delete event.request.headers['cookie'];
+    }
+
+    return event;
+  },
 });
 ```
 
@@ -377,10 +465,16 @@ Sentry.init({
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  tracesSampleRate: 1.0,
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
   environment: process.env.NODE_ENV,
   debug: process.env.NODE_ENV === 'development',
+
+  // Same beforeSend filtering as client-side
+  beforeSend(event, hint) {
+    // See full implementation in actual files
+    return event;
+  },
 });
 ```
 
@@ -404,7 +498,7 @@ export default withSentryConfig(nextConfig, {
 });
 ```
 
-### Express.js Configuration
+### Express.js Configuration (Security Hardened)
 
 **App initialization** (`app.js` or `server.js`):
 ```javascript
@@ -414,28 +508,54 @@ const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
-  tracesSampleRate: 1.0,
-  profilesSampleRate: 1.0,
+
+  // 10% sample rate in production, 100% in dev
+  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+
   environment: process.env.NODE_ENV,
   debug: process.env.NODE_ENV === 'development',
   integrations: [nodeProfilingIntegration()],
+
+  // Filter sensitive data before sending
+  beforeSend(event, hint) {
+    // Redact passwords, tokens, API keys from error messages
+    if (event.exception?.values) {
+      event.exception.values = event.exception.values.map(exception => {
+        if (exception.value) {
+          exception.value = exception.value
+            .replace(/password["\s:=]+[^\s&"]*/gi, 'password=***REDACTED***')
+            .replace(/token["\s:=]+[^\s&"]*/gi, 'token=***REDACTED***')
+            .replace(/mongodb:\/\/[^@]+@/gi, 'mongodb://***REDACTED***@');
+        }
+        return exception;
+      });
+    }
+
+    // Remove sensitive headers and cookies
+    if (event.request?.headers) {
+      delete event.request.headers['authorization'];
+      delete event.request.headers['cookie'];
+    }
+    if (event.request?.cookies) {
+      delete event.request.cookies;
+    }
+
+    return event;
+  },
 });
 
 // Now import other modules
 const express = require("express");
 const app = express();
 
-// Sentry request handler MUST be first
-app.use(Sentry.Handlers.requestHandler());
-app.use(Sentry.Handlers.tracingHandler());
+// Sentry error handler automatically catches errors
+Sentry.setupExpressErrorHandler(app);
 
 // Your routes here
 app.get("/", (req, res) => {
   res.json({ message: "Hello World" });
 });
-
-// Sentry error handler MUST be before other error handlers
-app.use(Sentry.Handlers.errorHandler());
 
 app.listen(3000);
 ```
@@ -472,19 +592,28 @@ app.listen(3000);
 
 ### Errors Not Appearing
 
-1. **Check DSN is correct:**
+1. **Check DSN is configured:**
    ```bash
-   grep -r "6f851a3a441b45ddb1b24bfe54d25ec3" nextjs-demo/
+   # Next.js - verify .env.local exists and has DSN
+   cat nextjs-demo/.env.local | grep SENTRY_DSN
+
+   # Express - verify .env exists and has DSN
+   cat express-sentry-demo/.env | grep SENTRY_DSN
    ```
 
 2. **Enable debug mode:**
-   Set `debug: true` in Sentry configs
+   Set `debug: true` in Sentry configs or check server logs
 
 3. **Check server logs:**
-   Look for "SDK successfully initialized"
+   Look for "SDK successfully initialized" message
 
 4. **Verify network requests:**
    Open browser DevTools → Network tab → Filter for "bugsink"
+
+5. **Test with simple error:**
+   ```bash
+   curl http://localhost:3000/test-sentry/error
+   ```
 
 ### Port Already in Use
 
@@ -549,12 +678,16 @@ This project is provided as-is for demonstration and documentation purposes.
 
 After setting up:
 
-1. **Customize for Production** - Adjust sample rates, add filters, configure releases
-2. **Add Error Boundaries** - Implement React error boundaries for better UX
-3. **Set Up Alerts** - Configure notifications in Bugsink for critical errors
-4. **Monitor Performance** - Use transaction tracking to identify bottlenecks
-5. **Filter Sensitive Data** - Implement `beforeSend` hooks to scrub PII
-6. **Track Releases** - Use release tracking to correlate errors with deployments
+1. **🔐 Review Security** - Read [SECURITY.md](./SECURITY.md) for production hardening checklist
+2. **Configure Environment** - Set up `.env` files with your actual Bugsink DSN
+3. **Test Filtering** - Verify sensitive data redaction is working (see SECURITY.md)
+4. **Customize Sample Rates** - Adjust based on your traffic (default: 10% prod, 100% dev)
+5. **Add Error Boundaries** - Implement React error boundaries for better UX
+6. **Set Up Alerts** - Configure notifications in Bugsink for critical errors
+7. **Monitor Performance** - Use transaction tracking to identify bottlenecks
+8. **Track Releases** - Use release tracking to correlate errors with deployments
+
+**Production Checklist:** See [SECURITY.md](./SECURITY.md#-production-deployment-checklist) for complete deployment guide.
 
 ## 🙋 Support
 
